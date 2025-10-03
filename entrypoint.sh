@@ -242,7 +242,7 @@ if [ "$USE_CLOUDFLARE_TUNNEL" = "true" ]; then
         log_debug "cloudflare" "waiting for log file to be created..."
         sleep 0.5
     done
-    log_debug "cloudflare" "log file found, starting log monitor"\
+    log_debug "cloudflare" "log file found, starting log monitor"
     # normalize Cloudflare logs
     tail -f /tmp/cloudflared.log | while read line; do
         # skip empty
