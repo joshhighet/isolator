@@ -1,4 +1,4 @@
-FROM debian:12 AS downloader
+FROM debian:13 AS downloader
 LABEL org.opencontainers.image.source=https://github.com/joshhighet/isolator
 
 ARG TOR_VERSION=14.5.7
@@ -30,7 +30,7 @@ RUN set -ex && \
     rm -rf /tmp/*.tar.xz /tmp/*.tar.gz
 
 # runtime
-FROM debian:12 AS runtime
+FROM debian:13 AS runtime
 LABEL org.opencontainers.image.source=https://github.com/joshhighet/isolator
 
 # environment setup first (most stable)
