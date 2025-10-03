@@ -1,0 +1,6 @@
+.DS_Store
+venv/
+mount/*
+!mount/.empty
+*.log
+*.tmp

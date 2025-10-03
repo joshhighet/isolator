@@ -1,0 +1,51 @@
+name: launch-session
+
+on:
+  workflow_dispatch:
+    inputs:
+      browser_url:
+        description: 'BROWSER_URL'
+        required: false
+        default: 'http://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion'
+      vnc_resolution:
+        description: 'VNC_RESOLUTION'
+        required: false
+        default: '2560x1600'
+      use_cloudflare_tunnel:
+        description: 'USE_CLOUDFLARE_TUNNEL'
+        required: false
+        default: true
+        type: boolean
+      keep_alive_duration:
+        description: 'session duration (seconds)'
+        required: true
+        default: 900
+        type: number
+
+jobs:
+  run-container:
+    runs-on: ubuntu-latest
+    steps:
+      - name: auth-ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: run-image
+        run: |
+          docker pull ghcr.io/${{ github.repository }}:latest
+          CMD="docker run -d"
+          CMD="$CMD -p 6080:6080"
+          CMD="$CMD --tmpfs /mount"
+          if [ ! -z "${{ inputs.browser_url }}" ]; then CMD="$CMD -e BROWSER_URL='${{ inputs.browser_url }}'"; fi
+          if [ ! -z "${{ inputs.vnc_resolution }}" ]; then CMD="$CMD -e VNC_RESOLUTION='${{ inputs.vnc_resolution }}'"; fi
+          if [ ! -z "${{ inputs.use_cloudflare_tunnel }}" ]; then CMD="$CMD -e USE_CLOUDFLARE_TUNNEL='${{ inputs.use_cloudflare_tunnel }}'"; fi
+          CMD="$CMD ghcr.io/${{ github.repository }}:latest"
+          echo "running: $CMD"
+          CONTAINER_ID=$(eval $CMD)
+          echo "container started with ID: $CONTAINER_ID"
+          docker logs -f $CONTAINER_ID &
+          sleep "${{ inputs.keep_alive_duration }}"
+          docker stop $CONTAINER_ID
+          wait

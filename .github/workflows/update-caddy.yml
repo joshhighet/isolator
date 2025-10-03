@@ -1,0 +1,46 @@
+name: update-caddy
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: dockerfile-updates
+  cancel-in-progress: false
+
+jobs:
+  update-caddy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: get-latest
+      run: ./scripts/update-caddy.sh
+
+    - name: check-updates
+      id: changes
+      run: |
+        if git diff --quiet dockerfile; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+        else
+          CHANGED_FILES=$(git diff --name-only)
+          if [ "$CHANGED_FILES" = "dockerfile" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "unexpected files changed: $CHANGED_FILES"
+            exit 1
+          fi
+        fi
+
+    - name: write-changes
+      if: steps.changes.outputs.changed == 'true'
+      run: |
+        git config user.name github-actions
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+        git add dockerfile
+        git commit -m "sudo: update caddy version"
+        git push
