@@ -113,8 +113,8 @@ if [ "$RECORD_VIDEO" = "true" ] && [ ! -d "$MOUNT_PATH" ]; then
 fi
 
 log_info "vnc" "starting vnc server on resolution $VNC_RESOLUTION"
-echo "$SESSION_ID" | tigervncpasswd -f > /home/toruser/.vnc/passwd
-chmod 600 /home/toruser/.vnc/passwd
+echo "$SESSION_ID" | tigervncpasswd -f > /home/toruser/.config/tigervnc/passwd
+chmod 600 /home/toruser/.config/tigervnc/passwd
 tigervncserver :1 -geometry $VNC_RESOLUTION -depth 24 -SecurityTypes VncAuth > /tmp/vnc.log 2>&1 &
 VNC_PID=$!
 log_debug "vnc" "vnc server started with pid: $VNC_PID"
@@ -205,14 +205,14 @@ else
 fi
 
 # downloads dir mounting
-if [ -d "$MOUNT_PATH" ]; then
+if [ -d "$MOUNT_PATH" ] && [ -w "$MOUNT_PATH" ]; then
     # symlink for downloads -> mount
     mkdir -p "$MOUNT_PATH/$SESSION_ID"
     rm -rf /home/toruser/Downloads
     ln --symbolic "$MOUNT_PATH/$SESSION_ID" /home/toruser/Downloads
     log_debug "isolator" "downloads symlinked to $MOUNT_PATH/$SESSION_ID"
 else
-    log_debug "isolator" "mount path not available - downloads will remain local"
+    log_debug "isolator" "mount path not available or not writable - downloads will remain local"
 fi
 
 NOVNC_PORT=${PORT:-6080}

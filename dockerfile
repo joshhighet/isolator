@@ -1,4 +1,4 @@
-FROM debian:12 AS downloader
+FROM debian:13 AS downloader
 LABEL org.opencontainers.image.source=https://github.com/joshhighet/isolator
 
 ARG TOR_VERSION=14.5.7
@@ -30,7 +30,7 @@ RUN set -ex && \
     rm -rf /tmp/*.tar.xz /tmp/*.tar.gz
 
 # runtime
-FROM debian:12 AS runtime
+FROM debian:13 AS runtime
 LABEL org.opencontainers.image.source=https://github.com/joshhighet/isolator
 
 # environment setup first (most stable)
@@ -57,6 +57,8 @@ RUN apt-get update && apt-get install -y \
     zenity \
     x11-utils \
     x11-xserver-utils \
+    libgtk-3-0 \
+    libgtk-3-common \
     --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -64,8 +66,8 @@ RUN apt-get update && apt-get install -y \
 # user and directories (stable structure)
 RUN useradd -m ${USER} -s /usr/bin/bash && \
     mkdir -p /home/${USER}/certs \
-             /home/${USER}/.vnc \
              /home/${USER}/.config/openbox \
+             /home/${USER}/.config/tigervnc \
              /etc/caddy && \
     openssl req -x509 -newkey rsa:4096 \
         -keyout /home/${USER}/certs/key.pem \
@@ -80,7 +82,7 @@ COPY --from=downloader /opt/caddy /usr/local/bin/caddy
 COPY --from=downloader /tmp/noVNC /home/${USER}/noVNC
 
 # config files (changes most frequently)
-COPY xstartup /home/${USER}/.vnc/xstartup
+COPY xstartup /home/${USER}/.config/tigervnc/xstartup
 COPY entrypoint.sh /entrypoint.sh
 COPY launch-browser.sh /home/toruser/launch-browser.sh
 COPY logging.sh /home/${USER}/logging.sh
@@ -92,13 +94,13 @@ COPY rc.xml /home/${USER}/.config/openbox/rc.xml
 COPY autostart.sh /home/${USER}/.config/openbox/autostart.sh
 
 # permissions and ownership (final step)
-RUN chmod +x /home/${USER}/.vnc/xstartup \
+RUN chmod +x /home/${USER}/.config/tigervnc/xstartup \
              /entrypoint.sh \
              /home/toruser/launch-browser.sh \
              /home/${USER}/.config/openbox/autostart.sh \
              /usr/local/bin/caddy && \
     chown -R ${USER}:${USER} /home/${USER} && \
-    chmod 700 /home/${USER}/.vnc && \
+    chmod 700 /home/${USER}/.config/tigervnc && \
     chmod 600 /home/${USER}/certs/*.pem
 
 # security hardening
