@@ -65,7 +65,7 @@ fi
 log_info "isolator" "starting entrypoint - RECORD_VIDEO=$RECORD_VIDEO, DEBUG=$EXPOSE_REMOTE_DEBUGGER"
 
 if [ -z "$BROWSER_URL" ]; then
-    BROWSER_URL="http://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion"
+    export BROWSER_URL="http://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion"
     log_info "isolator" "no BROWSER_URL set, using default duckduckgo onion"
 else
     # check BROWSER_URL format
