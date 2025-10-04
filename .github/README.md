@@ -18,7 +18,7 @@ isolator ensures ephemeral sessions with optional configurable persistence for d
 - isolation: runs in a containerized Debian 12 base
 - remote: web-based VNC interface for browser-in-browser interaction
 - modular: runtime flags for external Tor circuits, remote debugging, storage integration
-- can run self-contained within GHA runners and accessed with free CF tunnels
+- can run self-contained within GHA runners & access via free CF (rev)tunnel
 
 ### getting started
 
@@ -57,12 +57,12 @@ docker run -p 6080:6080 ghcr.io/joshhighet/isolator:latest
 |-------------------------|-------------------------------------------------------|---------------|
 | PORT                    | noVNC web interface port                              | 6080          |
 | MOUNT_PATH              | path inside container for mounted storage             | /mount        |
-| DEBUG_MODE              | enable bash tracing (set -x) in entrypoint.sh.        | false         |
+| DEBUG_MODE              | enable bash tracing (set -x) in entrypoint.sh         | false         |
 | BROWSER_URL             | URL to load on startup                                | DuckDuckGo    |
 | RECORD_VIDEO            | record the X11 session directly to mount point        | false         |
 | VNC_RESOLUTION          | desktop resolution (width x height)                   | 2560x1600     |
-| EXTERNAL_PROXY_HOST     | hostname or IP of the SOCKS5 proxy                    |               |
-| EXTERNAL_PROXY_PORT     | port of the SOCKS5 proxy                              |               |
+| EXTERNAL_PROXY_HOST     | ipv4/6 addr of remote SOCKS5 proxy                    |               |
+| EXTERNAL_PROXY_PORT     | port of the remote SOCKS5 proxy                       |               |
 | USE_CLOUDFLARE_TUNNEL   | use a free Cloudflare Tunnel for external access      | false         |
 | EXPOSE_REMOTE_DEBUGGER  | enable Tor Browser remote debugging on port 9222      | false         |
 
@@ -88,14 +88,13 @@ docker run -p 6080:6080 ghcr.io/joshhighet/isolator:latest
 
 ### notable
 
-- proxy resolution: if using external SOCKS5 proxy, both EXTERNAL_PROXY_HOST and EXTERNAL_PROXY_PORT must be set
 - web debugger: enabling remote debugging shows a UI warning in Tor Browser (by design)
-- tor config: internal Tor is disabled when you use an external proxy. custom user.js prefs _try_ enforce certain compensations
-- debugging: set DEBUG_MODE=true for entrypoint traces; noVNC logs to /tmp/novnc.log.
+- tor config: internal Tor is disabled when you use an external proxy. custom `user.js` prefs _try_ enforce certain compensations
+- debugging: when `DEBUG_MODE=true` set, alongside shell tracing, noVNC outputs to `/tmp/novnc.log`
 
 ### controlling
 
-if you enable debug you can connect via web debugger at `https://localhost:9222`. this allows agentic tools and automation frameworks such as puppeteer to interface and control the browser via webdriver (bidi) or devtools (cdp).
+with `EXPOSE_REMOTE_DEBUGGER=true` set you can connect via web debugger at `http://localhost:9222` to control the browser. this allows agentic tools and automation frameworks such as puppeteer to interface and control the via both webdriver (bidi) & devtools (cdp).
 
 caddy proxies the debugging interface outside of the container to handle the [remote security requirements](https://firefox-source-docs.mozilla.org/remote/Security.html) Tor Browser inherits from Firefox.
 
