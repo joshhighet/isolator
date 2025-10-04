@@ -17,6 +17,8 @@ user_pref("extensions.torlauncher.prompt_at_startup", false);
 user_pref("media.default_volume", "0.1");
 user_pref("media.volume_scale", "0.01");
 user_pref("browser.download.useDownloadDir", true);
+user_pref("browser.download.dir", "/home/toruser/Downloads");
+user_pref("browser.download.folderList", 2);
 user_pref("browser.download.forbid_open_with", true);
 user_pref("media.play-stand-alone", false);
 user_pref("media.autoplay.default", 5);
