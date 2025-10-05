@@ -38,6 +38,8 @@ fi
 
 SESSION_ID=$(cat /dev/urandom | tr -dc 'a-f0-9' | fold -w 32 | head -n1)
 export SESSION_ID
+SESSION_DIR="$MOUNT_PATH/$SESSION_ID"
+export SESSION_DIR
 if [ "$PASSTHROUGH_AUTH" = "false" ]; then
     log_debug "isolator" "generated SESSION_ID: $SESSION_ID (use this id to authenticate)"
 else
@@ -207,10 +209,10 @@ fi
 # downloads dir mounting
 if [ -d "$MOUNT_PATH" ] && [ -w "$MOUNT_PATH" ]; then
     # symlink for downloads -> mount
-    mkdir -p "$MOUNT_PATH/$SESSION_ID"
+    mkdir -p "$SESSION_DIR"
     rm -rf /home/toruser/Downloads
-    ln --symbolic "$MOUNT_PATH/$SESSION_ID" /home/toruser/Downloads
-    log_debug "isolator" "downloads symlinked to $MOUNT_PATH/$SESSION_ID"
+    ln --symbolic "$SESSION_DIR" /home/toruser/Downloads
+    log_debug "isolator" "downloads symlinked to $SESSION_DIR"
 else
     log_debug "isolator" "mount path not available or not writable - downloads will remain local"
 fi
@@ -291,6 +293,19 @@ cleanup() {
         echo "q" > /proc/$FFMPEG_PID/fd/0 2>/dev/null || kill -INT $FFMPEG_PID 2>/dev/null
         sleep 5
         kill -9 $FFMPEG_PID 2>/dev/null || true
+    fi
+    # remove empty session directory (where no downloads recorded)
+    if [ -d "$SESSION_DIR" ]; then
+        if [ -z "$(ls -A \"$SESSION_DIR\" 2>/dev/null)" ]; then
+            log_info "isolator" "no downloads - removing empty session directory $SESSION_DIR"
+            rmdir "$SESSION_DIR" 2>/dev/null || true
+        else
+            if [ "$(ls -A \"$SESSION_DIR\" | wc -l | tr -d ' ')" = "1" ] && [ -f "$SESSION_DIR/session.mp4" ]; then
+                log_debug "isolator" "session directory contains only recording file; preserving"
+            else
+                log_debug "isolator" "session directory retained (contains downloaded files)"
+            fi
+        fi
     fi
     log_debug "isolator" "cleanup complete"
     exit 0
