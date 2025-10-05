@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.bats": "shellscript"
+    },
+    "editor.formatOnSave": true,
+    "terminal.integrated.scrollback": 10000,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+}
