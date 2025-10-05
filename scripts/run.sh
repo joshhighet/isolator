@@ -1,5 +1,7 @@
 #!/bin/bash
 
+BROWSER_URL=${1:-http://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion}
+
 if docker info --format '{{.Runtimes}}' | grep -q "runsc"; then
     echo "using gvisor runtime"
     RUNTIME_SCFLAG="--runtime=runsc"
@@ -31,7 +33,7 @@ RUN_ARGS=(
     "--env" "DEBUG_MODE=false"
     "--env" "USE_CLOUDFLARE_TUNNEL=false"
     "--env" "EXPOSE_REMOTE_DEBUGGER=$EXPOSE_REMOTE_DEBUGGER"
-    "--env" "BROWSER_URL=http://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion"
+    "--env" "BROWSER_URL=$BROWSER_URL"
     "--env" "RECORD_VIDEO=false"
     "--env" "VNC_RESOLUTION=1280x720"
     "--env" "PASSTHROUGH_AUTH=true"
