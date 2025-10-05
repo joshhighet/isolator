@@ -1,0 +1,1 @@
+bats scripts/isolator.bats
