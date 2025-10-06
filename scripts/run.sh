@@ -22,6 +22,7 @@ else
 fi
 
 RUN_ARGS=(
+    "--rm"
     "--platform" "linux/amd64"
     "--publish" "6080:6080"
     "--volume" "$(pwd)/mount:/mount"
