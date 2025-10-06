@@ -16,13 +16,13 @@ RUN apt-get update && apt-get install -y \
 # download and extract in parallel, single layer
 RUN set -ex && \
     wget -q --show-progress --progress=bar:force:noscroll \
-        -O /tmp/tor-browser.tar.xz \
-        "https://dist.torproject.org/torbrowser/${TOR_VERSION}/tor-browser-linux-x86_64-${TOR_VERSION}.tar.xz" && \
+    -O /tmp/tor-browser.tar.xz \
+    "https://dist.torproject.org/torbrowser/${TOR_VERSION}/tor-browser-linux-x86_64-${TOR_VERSION}.tar.xz" && \
     wget -q --show-progress --progress=bar:force:noscroll \
-        -O /tmp/caddy.tar.gz \
-        "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_amd64.tar.gz" && \
+    -O /tmp/caddy.tar.gz \
+    "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_amd64.tar.gz" && \
     git clone --depth=1 --single-branch \
-        https://github.com/novnc/noVNC.git /tmp/noVNC && \
+    https://github.com/novnc/noVNC.git /tmp/noVNC && \
     mkdir -p /opt/tor-browser && \
     tar -xf /tmp/tor-browser.tar.xz -C /opt/ && \
     tar -xzf /tmp/caddy.tar.gz -C /opt/ && \
@@ -40,25 +40,22 @@ ENV TOR_FORCE_NET_CONFIG=0
 
 # system packages (stable, cache-friendly)
 RUN apt-get update && apt-get install -y \
-    openbox \
-    tigervnc-standalone-server \
-    tigervnc-common \
-    tigervnc-tools \
     wget \
     curl \
-    netcat-openbsd \
-    net-tools \
-    novnc \
-    openssl \
     bash \
+    novnc \
     wmctrl \
     ffmpeg \
-    inotify-tools \
-    zenity \
+    openssl \
+    openbox \
     x11-utils \
-    x11-xserver-utils \
     libgtk-3-0 \
+    netcat-openbsd \
+    tigervnc-tools \
+    tigervnc-common \
     libgtk-3-common \
+    x11-xserver-utils \
+    tigervnc-standalone-server \
     --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -66,15 +63,15 @@ RUN apt-get update && apt-get install -y \
 # user and directories (stable structure)
 RUN useradd -m ${USER} -s /usr/bin/bash && \
     mkdir -p /home/${USER}/certs \
-             /home/${USER}/.config/openbox \
-             /home/${USER}/.config/tigervnc \
-             /etc/caddy && \
+    /home/${USER}/.config/openbox \
+    /home/${USER}/.config/tigervnc \
+    /etc/caddy && \
     openssl req -x509 -newkey rsa:4096 \
-        -keyout /home/${USER}/certs/key.pem \
-        -out /home/${USER}/certs/cert.pem \
-        -days 365 -nodes -subj "/CN=isolator" && \
+    -keyout /home/${USER}/certs/key.pem \
+    -out /home/${USER}/certs/cert.pem \
+    -days 365 -nodes -subj "/CN=isolator" && \
     touch /home/${USER}/.Xauthority \
-          /home/${USER}/.Xresources
+    /home/${USER}/.Xresources
 
 # binaries from downloader stage (changes with versions)
 COPY --from=downloader /opt/tor-browser /home/${USER}/tor-browser
@@ -95,10 +92,10 @@ COPY config/openbox/autostart.sh /home/${USER}/.config/openbox/autostart.sh
 
 # permissions and ownership (final step)
 RUN chmod +x /home/${USER}/.config/tigervnc/xstartup \
-             /entrypoint.sh \
-             /home/toruser/launch-browser.sh \
-             /home/${USER}/.config/openbox/autostart.sh \
-             /usr/local/bin/caddy && \
+    /entrypoint.sh \
+    /home/toruser/launch-browser.sh \
+    /home/${USER}/.config/openbox/autostart.sh \
+    /usr/local/bin/caddy && \
     chown -R ${USER}:${USER} /home/${USER} && \
     chmod 700 /home/${USER}/.config/tigervnc && \
     chmod 600 /home/${USER}/certs/*.pem
@@ -113,10 +110,10 @@ EXPOSE 6080/tcp 9222/tcp
 
 # health monitoring
 HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=3 \
-  CMD DISPLAY=:1 wmctrl -l | grep -q "Tor Browser" && \
-      pgrep -f "novnc_proxy" > /dev/null && \
-      nc -z localhost 5901 && \
-      curl --fail --insecure --max-time 5 "https://localhost:$(echo ${PORT:-6080})" > /dev/null 2>&1
+    CMD DISPLAY=:1 wmctrl -l | grep -q "Tor Browser" && \
+    pgrep -f "novnc_proxy" > /dev/null && \
+    nc -z localhost 5901 && \
+    curl --fail --insecure --max-time 5 "https://localhost:$(echo ${PORT:-6080})" > /dev/null 2>&1
 
 # runtime user (non-root)
 USER ${USER}
