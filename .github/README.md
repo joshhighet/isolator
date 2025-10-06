@@ -68,9 +68,9 @@ docker run -p 6080:6080 ghcr.io/joshhighet/isolator:latest
 
 ## automatic maintenance
 
-- `update-tor-browser.yml` runs daily to fetch latest Tor Browser version
-- `update-caddy.yml` runs daily to fetch latest Caddy version
-- `update-bookmarks.yml` runs upon changes to bookmarks.csv to format a NETSCAPE-Bookmark-file
+- [`update-tor-browser.yml`](.github/workflows/update-tor-browser.yml) runs daily to fetch latest Tor Browser version
+- [`update-caddy.yml`](.github/workflows/update-caddy.yml) runs daily to fetch latest Caddy version
+- [`update-bookmarks.yml`](.github/workflows/update-bookmarks.yml) runs upon changes to [`bookmarks.csv`](config/browser/bookmarks.csv) to format a NETSCAPE-Bookmark-file
 
 ## notes
 
@@ -81,7 +81,7 @@ docker run -p 6080:6080 ghcr.io/joshhighet/isolator:latest
 
 ### github actions as browser
 
-- uses launch-session.yml workflow for on-demand sessions
+- uses [`launch-session.yml`](.github/workflows/launch-session.yml) workflow for on-demand sessions
 - inputs: browser_url, vnc_resolution, use_cloudflare_tunnel, keep_alive_duration (seconds).
 - runs on Ubuntu, pulls latest image, logs output, auto-stops after duration.
 - can dispatch via GitHub UI or API.
@@ -89,14 +89,14 @@ docker run -p 6080:6080 ghcr.io/joshhighet/isolator:latest
 ### notable
 
 - web debugger: enabling remote debugging shows a UI warning in Tor Browser (by design)
-- tor config: internal Tor is disabled when you use an external proxy. custom `user.js` prefs _try_ enforce certain compensations
+- tor config: internal Tor is disabled when you use an external proxy. custom [`user.js`](config/browser/user.js) prefs _try_ enforce certain compensations
 - debugging: when `DEBUG_MODE=true` set, alongside shell tracing, noVNC outputs to `/tmp/novnc.log`
 
 ### controlling
 
 with `EXPOSE_REMOTE_DEBUGGER=true` set you can connect via web debugger at `http://localhost:9222` to control the browser. this allows agentic tools and automation frameworks such as puppeteer to interface and control the via both webdriver (bidi) & devtools (cdp).
 
-caddy proxies the debugging interface outside of the container to handle the [remote security requirements](https://firefox-source-docs.mozilla.org/remote/Security.html) Tor Browser inherits from Firefox.
+[`caddy`](config/caddy/caddyfile) proxies the debugging interface outside of the container to handle the [remote security requirements](https://firefox-source-docs.mozilla.org/remote/Security.html) Tor Browser inherits from Firefox.
 
 the examples below use [websockets/wscat](https://github.com/websockets/wscat) - `npm install -g wscat`
 

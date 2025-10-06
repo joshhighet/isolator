@@ -4,7 +4,7 @@ import os
 timestamp = "1704067200"
 
 bookmarks = []
-csv_path = '../bookmarks.csv'
+csv_path = '../config/browser/bookmarks.csv'
 
 if os.path.exists(csv_path):
     with open(csv_path, 'r', encoding='utf-8') as f:
@@ -35,7 +35,7 @@ footer = '''
 
 content = header + '        ' + '\n        '.join(bookmarks) + footer
 
-with open('../bookmarks.html', 'w', encoding='utf-8') as f:
+with open('../config/browser/bookmarks.html', 'w', encoding='utf-8') as f:
     f.write(content)
 
-print("bookmarks file saved as bookmarks.html")
+print("bookmarks file saved as config/browser/bookmarks.html")

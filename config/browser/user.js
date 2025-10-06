@@ -45,4 +45,4 @@ user_pref("full-screen-api.warning.delay", 0);
 user_pref("full-screen-api.warning.timeout", 0);
 user_pref("security.sandbox.warn_unprivileged_namespaces", false);
 
-${PROXY_CONFIG}
+// ${PROXY_CONFIG}

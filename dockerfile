@@ -82,16 +82,16 @@ COPY --from=downloader /opt/caddy /usr/local/bin/caddy
 COPY --from=downloader /tmp/noVNC /home/${USER}/noVNC
 
 # config files (changes most frequently)
-COPY xstartup /home/${USER}/.config/tigervnc/xstartup
-COPY entrypoint.sh /entrypoint.sh
-COPY launch-browser.sh /home/toruser/launch-browser.sh
-COPY logging.sh /home/${USER}/logging.sh
-COPY index.html /home/${USER}/noVNC/index.html
-COPY user.js /home/${USER}/user.js
-COPY bookmarks.html /home/${USER}/tor-browser/Browser/TorBrowser/Data/Browser/profile.default/bookmarks.html
-COPY caddyfile /etc/caddy/caddyfile
-COPY rc.xml /home/${USER}/.config/openbox/rc.xml
-COPY autostart.sh /home/${USER}/.config/openbox/autostart.sh
+COPY config/tigervnc/xstartup /home/${USER}/.config/tigervnc/xstartup
+COPY src/entrypoint.sh /entrypoint.sh
+COPY src/launch-browser.sh /home/toruser/launch-browser.sh
+COPY src/logging.sh /home/${USER}/logging.sh
+COPY config/novnc/index.html /home/${USER}/noVNC/index.html
+COPY config/browser/user.js /home/${USER}/user.js
+COPY config/browser/bookmarks.html /home/${USER}/tor-browser/Browser/TorBrowser/Data/Browser/profile.default/bookmarks.html
+COPY config/caddy/caddyfile /etc/caddy/caddyfile
+COPY config/openbox/rc.xml /home/${USER}/.config/openbox/rc.xml
+COPY config/openbox/autostart.sh /home/${USER}/.config/openbox/autostart.sh
 
 # permissions and ownership (final step)
 RUN chmod +x /home/${USER}/.config/tigervnc/xstartup \
