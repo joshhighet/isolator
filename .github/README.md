@@ -2,8 +2,6 @@
 
 isolator sets up a dockerized, minimal desktop with a pre-configured Tor Browser to access browser-in-browser with noVNC. It is designed for security research, hidden service exploration, file acquisition, and scenarios requiring strong isolation.
 
-isolator ensures ephemeral sessions with optional configurable persistence for downloads and session recordings.
-
 ```
 ┌─ actions ─────────┐    ┌─ container ─────────┐    ┌─ external ──────┐
 │ auto-updates      │───▶│ openbox             │───▶│ tor network     │
@@ -13,109 +11,112 @@ isolator ensures ephemeral sessions with optional configurable persistence for d
 └───────────────────┘    └─────────────────────┘    └─────────────────┘
 ```
 
-### features
+## features
 
-- isolation: runs in a containerized Debian 12 base
-- remote: web-based VNC interface for browser-in-browser interaction
-- modular: runtime flags for external Tor circuits, remote debugging, storage integration
-- can run self-contained within GHA runners & access via free CF (rev)tunnel
+- **isolation**: runs in a containerized debian base
+- **remote**: web-based VNC interface for browser-in-browser interaction
+- **modular**: runtime flags for external tor circuits, remote debugging, storage integration
+- **ephemeral**: unique session IDs with optional persistence for downloads/recordings
+- **automated**: CI/CD for tor browser updates, testing, and container builds
 
-### getting started
-
-#### prereq's
-
-- docker
-- local clone: `git clone https://github.com/joshhighet/isolator.git`
-
-## build
+## quick start
 
 ```shell
-./scripts/build.sh
-```
+# build, test, run
+make build
+make test
+make run        # access at https://localhost:6080
 
-_image is pushed to `ghcr.io/joshhighet/isolator:latest`_
+# see all commands
+make
 
-## run
-
-### basic local run
-
-_(access at https://localhost:6080)_
-
-```shell
-./scripts/run.sh
-```
-
-### using pre-built image
-
-```shell
+# or use pre-built image
 docker run -p 6080:6080 ghcr.io/joshhighet/isolator:latest
 ```
 
-## environment options
+## configuration
 
-|     name                | description                                           | default       |
-|-------------------------|-------------------------------------------------------|---------------|
-| PORT                    | noVNC web interface port                              | 6080          |
-| MOUNT_PATH              | path inside container for mounted storage             | /mount        |
-| DEBUG_MODE              | enable bash tracing (set -x) in entrypoint.sh         | false         |
-| BROWSER_URL             | URL to load on startup                                | DuckDuckGo    |
-| RECORD_VIDEO            | record the X11 session directly to mount point        | false         |
-| VNC_RESOLUTION          | desktop resolution (width x height)                   | 2560x1600     |
-| EXTERNAL_PROXY_HOST     | ipv4/6 addr of remote SOCKS5 proxy                    |               |
-| EXTERNAL_PROXY_PORT     | port of the remote SOCKS5 proxy                       |               |
-| USE_CLOUDFLARE_TUNNEL   | use a free Cloudflare Tunnel for external access      | false         |
-| EXPOSE_REMOTE_DEBUGGER  | enable Tor Browser remote debugging on port 9222      | false         |
+common environment variables:
 
-## automatic maintenance
+| variable               | description                                    | default       |
+|------------------------|------------------------------------------------|---------------|
+| BROWSER_URL            | url to load on startup                         | duckduckgo    |
+| VNC_RESOLUTION         | desktop resolution                             | 2560x1600     |
+| RECORD_VIDEO           | record session to mount point                  | false         |
+| EXPOSE_REMOTE_DEBUGGER | enable chrome devtools on port 9222            | false         |
+| USE_CLOUDFLARE_TUNNEL  | expose via cloudflare tunnel                   | false         |
+| EXTERNAL_PROXY_HOST    | use external socks5 proxy (ip)                 | -             |
+| EXTERNAL_PROXY_PORT    | external proxy port                            | -             |
+| PORT                   | noVNC web interface port                       | 6080          |
+| MOUNT_PATH             | path inside container for mounted storage      | /mount        |
+| DEBUG_MODE             | enable bash tracing in entrypoint              | false         |
+| BROWSER_URL            | url to load on startup                         | duckduckgo    |
+| RECORD_VIDEO           | record the x11 session to mount point          | false         |
+| VNC_RESOLUTION         | desktop resolution (widthxheight)              | 2560x1600     |
+| EXTERNAL_PROXY_HOST    | ipv4/6 addr of remote socks5 proxy             | -             |
+| EXTERNAL_PROXY_PORT    | port of the remote socks5 proxy                | -             |
+| USE_CLOUDFLARE_TUNNEL  | use free cloudflare tunnel for external access | false         |
+| EXPOSE_REMOTE_DEBUGGER | enable tor browser remote debugging            | false         |
+| PASSTHROUGH_AUTH       | auto-connect to vnc with session id            | true          |
 
-- [`update-tor-browser.yml`](.github/workflows/update-tor-browser.yml) runs daily to fetch latest Tor Browser version
-- [`update-caddy.yml`](.github/workflows/update-caddy.yml) runs daily to fetch latest Caddy version
-- [`update-bookmarks.yml`](.github/workflows/update-bookmarks.yml) runs upon changes to [`bookmarks.csv`](config/browser/bookmarks.csv) to format a NETSCAPE-Bookmark-file
+## automation
 
-## notes
+- [`update-tor-browser.yml`](.github/workflows/update-tor-browser.yml) - daily tor browser version updates
+- [`update-caddy.yml`](.github/workflows/update-caddy.yml) - daily caddy version updates
+- [`update-bookmarks.yml`](.github/workflows/update-bookmarks.yml) - regenerate bookmarks on csv changes
+- [`build-and-test.yml`](.github/workflows/build.yml) - build, test, push to ghcr on commits
 
-- sessions use unique hex IDs (32 chars) for organizing files i.e `/mount/$SESSION_ID/file.ext`
-- downloads and video files are written directly to mounted storage
-- video recording uses FFmpeg with x11grab; output directly to mount point
-- cleanup trap ensures graceful shutdown and process cleanup
+## browser automation
 
-### github actions as browser
+enable remote debugging to control the browser via chrome devtools protocol (cdp) or webdriver bidi:
 
-- uses [`launch-session.yml`](.github/workflows/launch-session.yml) workflow for on-demand sessions
-- inputs: browser_url, vnc_resolution, use_cloudflare_tunnel, keep_alive_duration (seconds).
-- runs on Ubuntu, pulls latest image, logs output, auto-stops after duration.
-- can dispatch via GitHub UI or API.
+```shell
+docker run -p 6080:6080 -p 9222:9222 \
+  -e EXPOSE_REMOTE_DEBUGGER=true \
+  ghcr.io/joshhighet/isolator:latest
+```
 
-### notable
+### cdp examples
 
-- web debugger: enabling remote debugging shows a UI warning in Tor Browser (by design)
-- tor config: internal Tor is disabled when you use an external proxy. custom [`user.js`](config/browser/user.js) prefs _try_ enforce certain compensations
-- debugging: when `DEBUG_MODE=true` set, alongside shell tracing, noVNC outputs to `/tmp/novnc.log`
-
-### controlling
-
-with `EXPOSE_REMOTE_DEBUGGER=true` set you can connect via web debugger at `http://localhost:9222` to control the browser. this allows agentic tools and automation frameworks such as puppeteer to interface and control the via both webdriver (bidi) & devtools (cdp).
-
-[`caddy`](config/caddy/caddyfile) proxies the debugging interface outside of the container to handle the [remote security requirements](https://firefox-source-docs.mozilla.org/remote/Security.html) Tor Browser inherits from Firefox.
-
-the examples below use [websockets/wscat](https://github.com/websockets/wscat) - `npm install -g wscat`
-
-#### cdp
+requires [wscat](https://github.com/websockets/wscat): `npm install -g wscat`
 
 ```bash
 # list tabs
 curl -s localhost:9222/json | jq
 TAB_ID=$(curl -s localhost:9222/json | jq -r '.[0].id')
+
+# connect to tab
 wscat -c "ws://localhost:9222/devtools/page/$TAB_ID"
-# example
+
+# example commands
 {"id":1,"method":"Page.getNavigationHistory"}
-{"id":7,"method":"Page.captureScreenshot"}
+{"id":2,"method":"Page.captureScreenshot"}
 ```
 
-#### bidi
+### bidi examples
 
 ```bash
 wscat -c "ws://localhost:9222/session"
 {"id":1,"method":"session.new","params":{"capabilities":{}}}
 {"id":2,"method":"browsingContext.getTree","params":{}}
 ```
+
+[`caddy`](config/caddy/caddyfile) proxies the debugging interface to handle [remote security requirements](https://firefox-source-docs.mozilla.org/remote/Security.html) tor browser inherits from firefox.
+
+## github actions as browser
+
+run ephemeral browser sessions directly in github actions runners using [`launch-session.yml`](.github/workflows/launch-session.yml):
+
+- dispatch via github ui or api
+- auto-stops after specified duration
+- access via cloudflare tunnel url in logs
+
+## notes
+
+- sessions use unique 32-char hex ids for organizing files: `/mount/$SESSION_ID/file.ext`
+- downloads symlinked to mounted storage for persistence
+- video recording uses ffmpeg with x11grab
+- cleanup trap ensures graceful shutdown
+- custom [`user.js`](config/browser/user.js) prefs for tor browser hardening
+- enabling remote debugging shows ui warning in tor browser (by design)
+- when using external proxy, internal tor is disabled
