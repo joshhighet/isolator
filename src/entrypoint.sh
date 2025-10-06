@@ -294,17 +294,11 @@ cleanup() {
         sleep 5
         kill -9 $FFMPEG_PID 2>/dev/null || true
     fi
-    # remove empty session directory (where no downloads recorded)
-    if [ -d "$SESSION_DIR" ]; then
+    # remove empty session directory (skip if video recording enabled)
+    if [ "$RECORD_VIDEO" != "true" ] && [ -d "$SESSION_DIR" ]; then
         if [ -z "$(ls -A \"$SESSION_DIR\" 2>/dev/null)" ]; then
             log_info "isolator" "no downloads - removing empty session directory $SESSION_DIR"
             rmdir "$SESSION_DIR" 2>/dev/null || true
-        else
-            if [ "$(ls -A \"$SESSION_DIR\" | wc -l | tr -d ' ')" = "1" ] && [ -f "$SESSION_DIR/session.mp4" ]; then
-                log_debug "isolator" "session directory contains only recording file; preserving"
-            else
-                log_debug "isolator" "session directory retained (contains downloaded files)"
-            fi
         fi
     fi
     log_debug "isolator" "cleanup complete"
