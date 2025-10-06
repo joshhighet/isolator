@@ -40,24 +40,17 @@ common environment variables:
 
 | variable               | description                                    | default       |
 |------------------------|------------------------------------------------|---------------|
-| BROWSER_URL            | url to load on startup                         | duckduckgo    |
-| VNC_RESOLUTION         | desktop resolution                             | 2560x1600     |
-| RECORD_VIDEO           | record session to mount point                  | false         |
-| EXPOSE_REMOTE_DEBUGGER | enable chrome devtools on port 9222            | false         |
-| USE_CLOUDFLARE_TUNNEL  | expose via cloudflare tunnel                   | false         |
-| EXTERNAL_PROXY_HOST    | use external socks5 proxy (ip)                 | -             |
-| EXTERNAL_PROXY_PORT    | external proxy port                            | -             |
 | PORT                   | noVNC web interface port                       | 6080          |
 | MOUNT_PATH             | path inside container for mounted storage      | /mount        |
 | DEBUG_MODE             | enable bash tracing in entrypoint              | false         |
 | BROWSER_URL            | url to load on startup                         | duckduckgo    |
-| RECORD_VIDEO           | record the x11 session to mount point          | false         |
-| VNC_RESOLUTION         | desktop resolution (widthxheight)              | 2560x1600     |
-| EXTERNAL_PROXY_HOST    | ipv4/6 addr of remote socks5 proxy             | -             |
-| EXTERNAL_PROXY_PORT    | port of the remote socks5 proxy                | -             |
-| USE_CLOUDFLARE_TUNNEL  | use free cloudflare tunnel for external access | false         |
-| EXPOSE_REMOTE_DEBUGGER | enable tor browser remote debugging            | false         |
+| RECORD_VIDEO           | record session to mount point                  | false         |
+| VNC_RESOLUTION         | desktop resolution                             | 2560x1600     |
 | PASSTHROUGH_AUTH       | auto-connect to vnc with session id            | true          |
+| EXTERNAL_PROXY_HOST    | use external socks5 proxy (ip)                 | -             |
+| EXTERNAL_PROXY_PORT    | external proxy port                            | -             |
+| USE_CLOUDFLARE_TUNNEL  | expose via cloudflare tunnel                   | false         |
+| EXPOSE_REMOTE_DEBUGGER | enable chrome devtools on port 9222            | false         |
 
 ## automation
 
