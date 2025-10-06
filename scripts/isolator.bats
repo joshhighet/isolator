@@ -6,7 +6,9 @@ fi
 
 IMAGE_TAG="${IMAGE_TAG:-isolator:test}"
 PLATFORM="${RUNTIME_PLATFORM:-linux/amd64}"
-DEFAULT_WAIT=${WAIT_TIMEOUT:-150}
+DEFAULT_WAIT=${WAIT_TIMEOUT:-90}
+TEST_LABEL_KEY="isolator.test"
+TEST_LABEL_VALUE="true"
 
 declare -a CONTAINERS
 
@@ -22,6 +24,7 @@ setup() {
       attempt=$(( attempt + 1 ))
     done
   fi
+  docker ps -aq -f "label=${TEST_LABEL_KEY}=${TEST_LABEL_VALUE}" | xargs -r docker rm -f >/dev/null 2>&1 || true
 }
 
 teardown() {
@@ -29,12 +32,15 @@ teardown() {
     docker rm -f "$cid" >/dev/null 2>&1 || true
   done
   CONTAINERS=()
+  docker ps -aq -f "label=${TEST_LABEL_KEY}=${TEST_LABEL_VALUE}" | xargs -r docker rm -f >/dev/null 2>&1 || true
 }
 
 run_container() {
   local name="$1"; shift
   local cid
-  cid=$(docker run -d --platform "$PLATFORM" "$@" "$IMAGE_TAG" 2>/dev/null)
+  cid=$(docker run -d --rm \
+      --label "${TEST_LABEL_KEY}=${TEST_LABEL_VALUE}" \
+      --platform "$PLATFORM" "$@" "$IMAGE_TAG" 2>/dev/null)
   [ -n "$cid" ] || fail "failed to start container: $name"
   CONTAINERS+=("$cid")
   echo "$cid"
@@ -46,10 +52,14 @@ wait_for_ready() {
   local waited=0
   while (( waited < timeout )); do
     docker ps -q --no-trunc | grep -q "$cid" || { docker logs "$cid" | tail -n 40 >&2; fail "container exited"; }
+    status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}unknown{{end}}' "$cid" 2>/dev/null || echo unknown)
+    if [ "$status" = healthy ]; then
+      return 0
+    fi
     if docker logs "$cid" 2>&1 | grep -q 'all services started successfully - container ready'; then
       return 0
     fi
-    sleep 3; waited=$(( waited + 3 ))
+    sleep 1; waited=$(( waited + 1 ))
   done
   docker logs "$cid" | tail -n 120 >&2
   fail "timeout waiting for readiness"
@@ -57,13 +67,13 @@ wait_for_ready() {
 
 wait_for_browser_window() {
   local cid="$1"; shift
-  local timeout="${1:-150}"
+  local timeout="${1:-90}"
   local waited=0
   while (( waited < timeout )); do
     if docker exec "$cid" wmctrl -l 2>/dev/null | grep -iq 'tor browser'; then
       return 0
     fi
-    sleep 5; waited=$(( waited + 5 ))
+    sleep 2; waited=$(( waited + 2 ))
   done
   docker logs "$cid" | tail -n 60 >&2
   fail "tor browser window not detected"
@@ -87,7 +97,7 @@ wait_for_log() {
 assert_not_listening() {
   local cid="$1"; shift
   local port="$1"; shift
-  if docker exec "$cid" sh -c "netstat -tln 2>/dev/null | grep -q ':${port} '"; then
+  if docker exec "$cid" sh -c "nc -z -w 1 localhost ${port} >/dev/null 2>&1"; then
     fail "expected port $port NOT listening"
   fi
 }
@@ -95,15 +105,15 @@ assert_not_listening() {
 assert_listening() {
   local cid="$1"; shift
   local port="$1"; shift
-  local max_wait=${1:-40}
+  local max_wait=${1:-30}
   local waited=0
   while (( waited < max_wait )); do
-    if docker exec "$cid" sh -c "netstat -tln 2>/dev/null | grep -q ':${port} '"; then
+    if docker exec "$cid" sh -c "nc -z -w 1 localhost ${port} >/dev/null 2>&1"; then
       return 0
     fi
-    sleep 2; waited=$(( waited + 2 ))
+    sleep 1; waited=$(( waited + 1 ))
   done
-  docker exec "$cid" netstat -tln >&2 || true
+  docker exec "$cid" sh -c 'nc -z -w 1 localhost ${port} || true' >&2 || true
   fail "port $port not listening within ${max_wait}s"
 }
 
@@ -148,7 +158,7 @@ profile_user_js() { echo "/home/toruser/tor-browser/Browser/TorBrowser/Data/Brow
   cid=$(run_container rdebug-on -p 0:6080 -p 9222:9222 --tmpfs /mount -e EXPOSE_REMOTE_DEBUGGER=true)
   wait_for_ready "$cid"
   assert_log_contains "$cid" 'browser debugging available on port 9222'
-  assert_listening "$cid" 9222 120
+  assert_listening "$cid" 9222 60
   docker exec "$cid" pgrep -f caddy >/dev/null || fail "caddy not running"
 }
 
@@ -160,7 +170,7 @@ profile_user_js() { echo "/home/toruser/tor-browser/Browser/TorBrowser/Data/Brow
 }
 
 @test "invalid VNC_RESOLUTION rejected early" {
-  cid=$(docker run -d --platform "$PLATFORM" -e VNC_RESOLUTION=garbage "$IMAGE_TAG")
+  cid=$(docker run -d --label "${TEST_LABEL_KEY}=${TEST_LABEL_VALUE}" --platform "$PLATFORM" -e VNC_RESOLUTION=garbage "$IMAGE_TAG")
   CONTAINERS+=("$cid")
   sleep 4
   state=$(docker inspect --format '{{.State.Status}}' "$cid")
@@ -206,22 +216,22 @@ profile_user_js() { echo "/home/toruser/tor-browser/Browser/TorBrowser/Data/Brow
   [ -n "$sid" ] || fail "could not derive session id"
   file="mount/$sid/session.mp4"
   waited=0
-  last_size=0
-  while (( waited < 120 )); do
-    if [ -f "$file" ]; then
-      size=$(stat -c %s "$file" 2>/dev/null || stat -f %z "$file")
-      if (( size > 32 )); then
-        if (( size > last_size )) || (( waited > 30 )); then
-          break
-        fi
-      fi
-      last_size=$size
+  while (( waited < 60 )); do
+    container_size=$(docker exec "$cid" stat -c %s "/mount/$sid/session.mp4" 2>/dev/null || echo "0")
+    if (( container_size > 200 )); then
+      break
     fi
-    sleep 5; waited=$(( waited + 5 ))
+    sleep 1; waited=$(( waited + 1 ))
   done
+  [ "${container_size:-0}" -gt 200 ] || fail "recording did not start (size: ${container_size} bytes)"
+  docker stop "$cid" >/dev/null 2>&1
+  sleep 2
   [ -f "$file" ] || fail "session.mp4 not created"
   size=$(stat -c %s "$file" 2>/dev/null || stat -f %z "$file")
   [ "${size:-0}" -gt 32 ] || fail "session.mp4 too small (${size} bytes)"
+  if ! ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file" >/dev/null 2>&1; then
+    fail "session.mp4 is corrupted or invalid"
+  fi
 }
 
 @test "structured logging format present" {
