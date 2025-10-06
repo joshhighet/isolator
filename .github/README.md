@@ -1,6 +1,6 @@
 # isolator
 
-isolator sets up a dockerized, minimal desktop with a pre-configured Tor Browser to access browser-in-browser with noVNC. It is designed for security research, hidden service exploration, file acquisition, and scenarios requiring strong isolation.
+isolator sets up a dockerized, minimal desktop with a pre-configured Tor Browser to access browser-in-browser with noVNC. It is designed for security research, hidden service exploration, file acquisition & scenarios requiring strong isolation.
 
 ```
 ┌─ actions ─────────┐    ┌─ container ─────────┐    ┌─ external ──────┐
