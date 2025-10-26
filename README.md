@@ -17,7 +17,8 @@ isolator sets up a dockerized, minimal desktop with a pre-configured Tor Browser
 - **remote**: web-based VNC interface for browser-in-browser interaction
 - **modular**: runtime flags for external tor circuits, remote debugging, storage integration
 - **ephemeral**: unique session IDs with optional persistence for downloads/recordings
-- **automated**: CI/CD for tor browser updates, testing, and container builds
+
+[![build-and-test](https://github.com/joshhighet/isolator/actions/workflows/build.yml/badge.svg)](https://github.com/joshhighet/isolator/actions/workflows/build.yml) [![update-tor-browser](https://github.com/joshhighet/isolator/actions/workflows/update-tor-browser.yml/badge.svg)](https://github.com/joshhighet/isolator/actions/workflows/update-tor-browser.yml) [![update-bookmarks](https://github.com/joshhighet/isolator/actions/workflows/update-bookmarks.yml/badge.svg)](https://github.com/joshhighet/isolator/actions/workflows/update-bookmarks.yml) [![update-caddy](https://github.com/joshhighet/isolator/actions/workflows/update-caddy.yml/badge.svg)](https://github.com/joshhighet/isolator/actions/workflows/update-caddy.yml)
 
 ## quick start
 
@@ -98,7 +99,9 @@ wscat -c "ws://localhost:9222/session"
 
 ## github actions as browser
 
-run ephemeral browser sessions directly in github actions runners using [`launch-session.yml`](.github/workflows/launch-session.yml):
+run ephemeral browser sessions directly in github actions runners using [`launch-session.yml`](.github/workflows/launch-session.yml)
+
+[![launch-session](https://github.com/joshhighet/isolator/actions/workflows/launch-session.yml/badge.svg)](https://github.com/joshhighet/isolator/actions/workflows/launch-session.yml)
 
 - dispatch via github ui or api
 - auto-stops after specified duration
@@ -113,3 +116,7 @@ run ephemeral browser sessions directly in github actions runners using [`launch
 - custom [`user.js`](config/browser/user.js) prefs for tor browser hardening
 - enabling remote debugging shows ui warning in tor browser (by design)
 - when using external proxy, internal tor is disabled
+
+---
+
+[![CodeQL](https://github.com/joshhighet/isolator/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/joshhighet/isolator/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/joshhighet/isolator/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/joshhighet/isolator/actions/workflows/dependabot/dependabot-updates)
