@@ -51,7 +51,7 @@ common environment variables:
 | EXTERNAL_PROXY_HOST    | use external socks5 proxy (ip)                 | -             |
 | EXTERNAL_PROXY_PORT    | external proxy port                            | -             |
 | USE_CLOUDFLARE_TUNNEL  | expose via cloudflare tunnel                   | false         |
-| EXPOSE_REMOTE_DEBUGGER | enable chrome devtools on port 9222            | false         |
+| EXPOSE_REMOTE_DEBUGGER | enable wd-BIDI & CDP on port :9222             | false         |
 
 ## automation
 
