@@ -1,7 +1,7 @@
 FROM debian:13 AS downloader
 LABEL org.opencontainers.image.source=https://github.com/joshhighet/isolator
 
-ARG TOR_VERSION=15.0.6
+ARG TOR_VERSION=15.0.7
 ARG CADDY_VERSION=2.11.1
 
 # build-time deps in single layer
