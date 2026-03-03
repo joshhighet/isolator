@@ -12,14 +12,14 @@ concurrency:
 jobs:
   update-tor-browser:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: checkout
       uses: actions/checkout@v4
-      
+
     - name: get-latest
       run: ./scripts/update-browser.sh
-    
+
     - name: check-updates
       id: changes
       run: |
@@ -35,12 +35,12 @@ jobs:
             exit 1
           fi
         fi
-    
+
     - name: write-changes
       if: steps.changes.outputs.changed == 'true'
       run: |
         git config user.name github-actions
         git config user.email 41898282+github-actions[bot]@users.noreply.github.com
         git add dockerfile
-        git commit -m "sudo: update browser version"
+        git commit -m "update browser version"
         git push
