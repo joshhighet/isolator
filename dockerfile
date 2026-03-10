@@ -3,6 +3,7 @@ LABEL org.opencontainers.image.source=https://github.com/joshhighet/isolator
 
 ARG TOR_VERSION=15.0.7
 ARG CADDY_VERSION=2.11.2
+ARG NOVNC_VERSION=1.6.0
 
 # build-time deps in single layer
 RUN apt-get update && apt-get install -y \
@@ -21,7 +22,7 @@ RUN set -ex && \
     wget -q --show-progress --progress=bar:force:noscroll \
     -O /tmp/caddy.tar.gz \
     "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_amd64.tar.gz" && \
-    git clone --depth=1 --single-branch \
+    git clone --depth=1 --single-branch --branch v${NOVNC_VERSION} \
     https://github.com/novnc/noVNC.git /tmp/noVNC && \
     mkdir -p /opt/tor-browser && \
     tar -xf /tmp/tor-browser.tar.xz -C /opt/ && \
