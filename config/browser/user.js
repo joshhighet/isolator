@@ -13,7 +13,6 @@ user_pref("browser.fullscreen.animateUp", 0);
 user_pref("intl.locale.requested", "en-US");
 user_pref("intl.locale.matchOS", false);
 user_pref("intl.accept_languages", "en-US, en");
-user_pref("extensions.torlauncher.prompt_at_startup", false);
 user_pref("media.default_volume", "0.1");
 user_pref("media.volume_scale", "0.01");
 user_pref("browser.download.useDownloadDir", true);
