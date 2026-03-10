@@ -114,6 +114,8 @@ if [ "$RECORD_VIDEO" = "true" ] && [ ! -d "$MOUNT_PATH" ]; then
     exit 1
 fi
 
+trap cleanup INT TERM
+
 log_info "vnc" "starting vnc server on resolution $VNC_RESOLUTION"
 echo "$SESSION_ID" | tigervncpasswd -f > /home/toruser/.config/tigervnc/passwd
 chmod 600 /home/toruser/.config/tigervnc/passwd
@@ -286,9 +288,9 @@ fi
 
 cleanup() {
     log_debug "isolator" "received shutdown signal - cleaning up"
-    kill -TERM $NOVNC_PID $BROWSER_PID $VNC_PID ${TUNNEL_PID:-} 2>/dev/null || true
+    kill -TERM ${NOVNC_PID:-} ${BROWSER_PID:-} ${VNC_PID:-} ${TUNNEL_PID:-} 2>/dev/null || true
     /usr/local/bin/caddy stop 2>/dev/null || true
-    wait $NOVNC_PID $BROWSER_PID $VNC_PID ${TUNNEL_PID:-} 2>/dev/null || true
+    wait ${NOVNC_PID:-} ${BROWSER_PID:-} ${VNC_PID:-} ${TUNNEL_PID:-} 2>/dev/null || true
     if [ ! -z "${FFMPEG_PID:-}" ]; then
         log_debug "ffmpeg" "gracefully stopping ffmpeg"
         echo "q" > /proc/$FFMPEG_PID/fd/0 2>/dev/null || kill -INT $FFMPEG_PID 2>/dev/null
@@ -314,5 +316,4 @@ if [ "$EXPOSE_REMOTE_DEBUGGER" = "true" ]; then
     log_info "isolator" "⭐️ controlport: http://localhost:9222"
 fi
 
-trap cleanup INT TERM
 wait $NOVNC_PID
