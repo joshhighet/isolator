@@ -150,7 +150,9 @@ if [ "$EXPOSE_REMOTE_DEBUGGER" = "true" ]; then
     log_debug "caddy" "waiting 10s for browser debugging interface to start"
     sleep 10
     log_info "caddy" "starting reverse proxy for remote debugging"
-    /usr/local/bin/caddy start --config /etc/caddy/caddyfile --adapter caddyfile 2>&1 | while read line; do
+    /usr/local/bin/caddy start --config /etc/caddy/caddyfile --adapter caddyfile > /tmp/caddy_start.log 2>&1
+    CADDY_STARTED=$?
+    while read line; do
         # parse caddy logs
         if echo "$line" | grep -q '"level":'; then
             level=$(echo "$line" | sed -n 's/.*"level":"\([^"]*\)".*/\1/p' | tr '[:lower:]' '[:upper:]')
@@ -159,8 +161,7 @@ if [ "$EXPOSE_REMOTE_DEBUGGER" = "true" ]; then
         else
             log "INFO" "caddy" "$line"
         fi
-    done &
-    CADDY_STARTED=$?
+    done < /tmp/caddy_start.log
     if [ $CADDY_STARTED -eq 0 ]; then
         log_info "caddy" "started successfully - browser debugging available on port 9222"
     else
